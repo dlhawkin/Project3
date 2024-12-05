@@ -1,0 +1,522 @@
+---
+title: "Simulation Models"
+author: "Diahmin Hawkins dlh2166@columbia.edu"
+date: "12/2/2024"
+output: html_document
+---
+```{r, eval=FALSE}
+
+library(ggwordcloud)
+library(ggplot2)
+library(magick)  
+
+
+# Path to your image
+fig_path <- "/Users/diahminhawkins/Documents/GitHub/Project3/Hospitals.png"
+
+# Load the image using magick
+img <- image_read(fig_path)
+
+# Convert image to raster for use in ggplot
+img_raster <- as.raster(img)
+
+
+# Example data
+words <- c("Cluster Randomized Trial", "Budget", "Constraints", "Hospitals", "Chicago", 
+           "Race", "Age", "Gender", "Weather", "Performance", 
+           "Wet Bulb Globe Temperature", "Humidity", "Black Globe Temp C", "Dew Point in C", "Dry bulb Temp C","Flag", 
+         "Percent Relative Humidity","Solar Radiation", "Wet Bulb Globe Temp",
+         "Wet Bulb Temp C", "Wind Speed")
+
+frequencies <- c(1, 18, 1, 16, 14, 55, 5, 1, 4, 42, 3, 14, 14, 18, 16, 4,7,9,10,22, 55)
+
+new_frame <- data.frame(words, frequencies)
+
+# Generate the word cloud on top of the image background
+ggplot(new_frame, aes(label = words, size = frequencies)) +
+  # Add the image background
+  annotation_raster(img_raster, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+  
+  # Generate the word cloud
+  geom_text_wordcloud(aes(color = frequencies)) +
+  scale_size_area(max_size = 10) +
+  
+  # Customize the colors of the words
+  scale_color_gradient(low = "yellow", high = "red") +
+  
+  # Remove axis titles and labels since we want the word cloud only
+  theme_void()
+
+
+```
+
+
+
+
+
+
+
+# Introduction 
+Cluster randomized trial is a randomized controlled trial where individuals are randomly assigned into groups called clusters. This paper presents a collaborative effort with Dr. Zhijin Wu from the Biostatistics Department at Brown Universityto address a fundamental challenge in experimental design: how to allocate resources optimally under budget constraints to maximize the precision of treatment effect estimation.We will consider a cluster randomized trial in which we will assign observations to either the control or treatment group and our goal is to estimate the treatment effect on an outcome variable Y.
+
+Our focus is on designing a simulation study to investigate optimal experimental design strategies for cluster randomized trials under budget constraints. More Specifically, we aim to determine the ideal allocation of resources between the number of clusters and the number of observations within each cluster, given a fixed budget \( B \). While we consider \( B \) in monetary terms, a key feature of our framework is the cost structure: the initial sample from a cluster incurs a higher cost (\( c_1 \)), while subsequent samples within the same cluster are relatively cheaper (\( c_2 < c_1 \)). 
+
+An additional consideration in our design is the inherent correlation among samples within the same cluster. While increasing the number of observations per cluster can reduce costs, the correlated nature of these observations may diminish their marginal contribution to the precision of treatment effect estimation. In other words,  while samples from the same cluster are cheaper , samples within a cluster may be correlated. In consideration of sequencing data, samples within a cluster might correspond to collecting technical replicates(repeated measurements from ....) and different clusters correspond to biological replicates( measurements from different samples) .echnical replicates are cheaper to obtain but are highly correlated.Our simulation study will explore this tradeoff and provide insights into the optimal balance between cluster size and cluster number, with the goal of maximizing efficiency while adhering to resource constraints.  
+
+In this study, we will focus on three aims:
+*Aim 1*: Design a simulation study using the ADEMP framework from class to evaluate potential study designs,
+*Aim 2*: Explore relationships between the underlying data generation mechanism parameters and the relative costs  (\( c_2 /c_1 \)) and how these impact the optimal study design.
+*Aim 3*: Extend your simulation study to the setting in which Y follows a Poisson distribution with mean $\mu_i$\ and explore how this impacts the results. The hierarchical model for this setting is given below.
+
+By leveraging simulation-based methods, we aim to contribute to the development of cost-effective and statistically rigorous approaches for designing cluster randomized trials.  
+
+
+
+
+
+
+
+# Methods
+The methods used in this the ADEMP framework. The ADEMP Framework is a structured approach used in simulation models that stands for Aims, Data-generating mechanisms, Methods, Estimands, Performance measures. The *Aims* of this study consists of :
+*Aim 1*: Design a simulation study using the ADEMP framework from class to evaluate potential study designs.
+*Aim 2*: Explore relationships between the underlying data generation mechanism parameters and the relative costs  (\( c_2 /c_1 \)) and how these impact the optimal study design.
+*Aim 3*: Extend your simulation study to the setting in which Y follows a Poisson distribution with mean $\mu_i$\ and explore how this impacts the results. The hierarchical model for this setting is given below.
+The *Data-generagting mechanism* used in this study is a randomized cluster trial with assigned treatment groups using simulated data. To start this analysis, we will consider Y to be normally distributed.For the observation r(r=1,...,R for repeated observations) in cluster g(g=1,...,G groups). The $\X_i$\ be a binary indicator of whether or not cluster g is assigned to treatment group (0= control, 1= treatment) and let Y be the observed outcome. To estimate the treatment effect, we will assume a hierarchical model for Y where
+$\mu_{i0}$\ = $\alpha$\ + $\beta$\ $X_i$\ fixed effect, $\mu_{i0}$=$\alpha$+ $\beta$
+$\mu_{i}$|$\epsilon_{i}$= $\mu_{i0}$ + $\epsilon_{i}$ with $\epsilon_{i}$~N(0,$\gamma^2$), or in other words $\mu_{i}$ ~ N($\mu_{i0}$,$\gamma^2$)
+$\Y_{rg}$\|$\mu_{i}$ + $\epsilon_{rg}$ with $\epsilon_{rg}$~iid N(0,$\sigma^2$).
+
+This means that the marginal mean of $Y_{rg}$ is E($Y_{rg}$| $X_{i}$)= $\alpha$ + $\beta$ $X_{i}$ and the conditional mean given $\epsilon_{i}$ is E($Y_{rj}$|$X_i$,$\epsilon_{i}$)=$\alpha$ + $\beta$+ $X_{i}$+ $\epsilon_{i}$. The estimate of $\beta$ will be our estimate of the average treatment effect and is our parameter of interest. 
+
+For *Aim 3* , each cluster g, we have 
+log($\mu_{i}$)~ N ($\alpha$ + $\beta$ $X_I$,$\gamma^2$). We observe the conditionally independent units (r=1,...R) withinh the cluster 
+$Y_{rg}$|$\mu_i$ ~ Poisson($\mu_i$). The sum of iid Poisson random variables is still Poisson therefore we have the simplified model $Y_r$|$\mu_r$~Poisson(R$\mu_i$).
+Methods: The methods used in this simulation model is a normally distributed linear regression model for Aim 1 with a factorial design that varies different parameters($\beta$, $\gamma$,$\sigma$).In Aim 2, we will vary the ratios of (\( c_2 /c_1 \)). In Aim 3, we will  use a poisson regression model to represent an extension of the hierarchical model to handle the outcomes $Y_rj$ in a count base way, rather than countinous
+
+
+The performance measures used in this study is the mean square error and the bias. We will also be observing the correlation between observations using the ICC, senstivity to cost ratios (c1/c2) and the design efficiency.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+eij is the patient variation within hospitals 
+mi cluster specific mean
+number patients be a multiple of multiple cluster I have
+
+
+is changibg alpha or beta going to impact results (alpha is just a coeffient/intercept
+                                                              if change intercept will it impact results) if impact results (what is the range it will  have impact) if it doesnt change you dont have to worry about it  (look at alpha and see if it change s)
+
+
+
+# Aim 1
+```{r}
+#Xi<- list()
+#Mi<- list()
+#Yi<- list()
+#Mio<- list()
+
+aim1_function<- function(R, G,sigma,gamma,alpha,beta){
+R<-1000 # NUMBER OF OBSERVATIONS TAKEN FROM EACH CLUSTER
+G<- 400  #number of clusters (how many clusters)
+gamma<-1
+sigma<-1
+alpha<-100 
+beta<-200
+eij<- rnorm(G*R,0,sigma) 
+epsilon<- rnorm(G,0,gamma) #how they differ from one another
+Xi<- round(runif(400, min= 0, max = 1))
+Mio<- alpha + beta * Xi
+Mi<- Mio + epsilon
+GxR<-rep(Mi,each=R) # want the Mi value to be same amount numbers to correspond to the R value
+Yi<- GxR + eij
+return( 
+  list(Xi, Mi, Yi, Mio))
+}
+
+aim1_function(100,2,.5,.3,12,6)
+
+#Budget Constraints
+
+budget_con<-300
+what the 
+cost of the sample from the cluster and cost of sample from other clusters
+check values for C1 and C2
+
+
+G and R are going to change a bit
+```
+ what is the optimal G and R?
+ How do I use simulation 
+ How does the optinal strategy change using c1 and c2? (tabke and figures how changing these parameters impact these results )
+
+```{r}
+# Load necessary packages
+library(lme4) # For linear mixed-effects model
+library(ggplot2) # For visualization
+
+set.seed(222)
+# Function to simulate data
+simulate_data <- function(G, R, alpha, beta, gamma2, sigma2, treatment_prob = 0.5) {
+  # Generate cluster-level treatment assignment
+  X <- rbinom(G, 1, treatment_prob) # Randomly assign treatment (1) or control (0) to clusters
+  
+  # Generate cluster-level random effects
+  epsilon <- rnorm(G, mean = 0, sd = sqrt(gamma2))
+  
+  # Generate individual-level observations
+  data <- data.frame(
+    cluster = rep(1:G, each = R),
+    X = rep(X, each = R)
+  )
+  
+  epsilon <- rep(epsilon, each = R) #(data should only have x and y and g)
+  data$Y <- with(data, alpha + beta * X + epsilon + rnorm(n = nrow(data), mean = 0, sd = sqrt(sigma2)))
+  
+  return(data)
+}
+
+# Function to evaluate designs
+evaluate_design <- function(G, R, alpha, beta, gamma2, sigma2, c1, c2, B, n_sim) {
+  results <- data.frame(G = integer(), R = integer(), bias = numeric(), variance = numeric(), mse = numeric())
+  
+  for (g in G) {
+    for (r in R) {
+      # Check budget constraint
+      total_cost <- g * c1 + g * (r - 1) * c2
+      if (total_cost > B) next # Skip if over budget ( they will always be cheaper than thge first sample)
+      
+      beta_estimates <- numeric(n_sim)
+      
+      for (sim in 1:n_sim) {
+        data <- simulate_data(G = g, R = r, alpha = alpha, beta = beta, gamma2 = gamma2, sigma2 = sigma2)
+        
+        # Fit linear mixed-effects model
+        model <- lmer(Y ~ X + (1 | cluster), data = data)
+        beta_estimates[sim] <- fixef(model)["X"] # Extract estimate for beta
+      }
+      
+      # Calculate performance metrics
+      bias <- mean(beta_estimates - beta, na.rm=T)
+      variance <- var(beta_estimates,na.rm=T)
+      mse <- bias^2 + variance
+      
+      # Store results
+      results <- rbind(results, data.frame(G = g, R = r, bias = bias, variance = variance, mse = mse, beta=beta, alpha=alpha, c1=c1, c2=c2))
+    }
+  }
+  
+  return(results)
+}
+
+# Parameters
+alpha <- 0
+beta <- 1 # True treatment effect
+gamma2 <- 1 # Between-cluster variance
+sigma2 <- 1 # Within-cluster variance
+c1 <- 10 # Cost of the first sample in a cluster
+c2 <- 5 # Cost of additional samples in the same cluster
+B <- 1000 # Budget
+n_sim <- 100 # Number of simulations
+
+# Design grid
+G <- seq(5, 50, by = 5) # Number of clusters
+R <- seq(2, 20, by = 2) # Observations per cluster
+
+# Evaluate designs
+results <- evaluate_design(G, R, alpha, beta, gamma2, sigma2, c1, c2, B, n_sim)
+
+# Visualize results
+ggplot(results, aes(x = G, y = mse, color = factor(R))) +
+  geom_line() +
+  labs(title = "Mean Squared Error (MSE) by Number of Clusters and Observations",
+       x = "Number of Clusters (G)",
+       y = "Mean Squared Error (MSE)",
+       color = "Observations per Cluster (R)") +
+  theme_minimal()
+
+results2 <- evaluate_design(G, R, alpha, 20, gamma2, sigma2, c1, c2, B, n_sim)
+
+ggplot(results2, aes(x = G, y = mse, color = factor(R))) +
+  geom_line() +
+  labs(title = "Mean Squared Error (MSE) by Number of Clusters and Observations",
+       x = "Number of Clusters (G)",
+       y = "Mean Squared Error (MSE)",
+       color = "Observations per Cluster (R)") +
+  theme_minimal()
+
+
+alpha is intercept
+true treatment effects
+X is assignment group
+
+
+find optimal number of clusters (elbow)
+factorial design (change all of them )
+hierarchical design ( most important )
+
+View(results)
+```
+```{r}
+# Evaluate designs
+results <- evaluate_design(G, R, alpha, beta, gamma2, sigma2, c1, c2, B, n_sim)
+
+# Visualize results
+ggplot(results, aes(x = G, y = mse, color = factor(R))) +
+  geom_line() +
+  labs(title = "Mean Squared Error (MSE) by Number of Clusters and Observations",
+       x = "Number of Clusters (G)",
+       y = "Mean Squared Error (MSE)",
+       color = "Observations per Cluster (R)") +
+  theme_minimal()
+
+
+
+
+```
+```{r}
+Poiss
+set.seed(222)
+# Function to simulate data
+simulate_data <- function(G, R, alpha, beta, gamma2, sigma2, treatment_prob = 0.5) {
+  # Generate cluster-level treatment assignment
+  X <- rbinom(G, 1, treatment_prob) # Randomly assign treatment (1) or control (0) to clusters
+  
+  # Generate cluster-level random effects
+  epsilon <- rnorm(G, mean = 0, sd = sqrt(gamma2))
+  
+  # Generate individual-level observations
+  data <- data.frame(
+    cluster = rep(1:G, each = R),
+    X = rep(X, each = R)
+  )
+  
+  epsilon <- rep(epsilon, each = R) #(data should only have x and y and g)
+  Mu<- exp(alpha + beta * X + epsilon)
+  data$Y <- with(data,  rpois(n = nrow(data), lambda = Mu))
+  
+  return(data)
+}
+
+# Function to evaluate designs
+evaluate_design2 <- function(G, R, alpha, beta, gamma2, c1, c2, B, n_sim) {
+  results <- data.frame(G = integer(), R = integer(), bias = numeric(), variance = numeric(), mse = numeric())
+  
+  for (g in G) {
+    for (r in R) {
+      # Check budget constraint
+      total_cost <- g * c1 + g * (r - 1) * c2
+      if (total_cost > B) next # Skip if over budget ( they will always be cheaper than thge first sample)
+      
+      beta_estimates <- numeric(n_sim)
+      
+      for (sim in 1:n_sim) {
+        data <- simulate_data(G = g, R = r, alpha = alpha, beta = beta, gamma2 = gamma2)
+        
+        # Fit linear mixed-effects model
+        model <- glmer(Y ~ X + (1 | cluster), data = data, family= poisson)
+        beta_estimates[sim] <- fixef(model)["X"] # Extract estimate for beta
+      }
+      
+      # Calculate performance metrics
+      bias <- mean(beta_estimates - beta, na.rm=T)
+      variance <- var(beta_estimates,na.rm=T)
+      mse <- bias^2 + variance
+      
+      # Store results
+      results22 <- rbind(results, data.frame(G = g, R = r, bias = bias, variance = variance, mse = mse, beta=beta, alpha=alpha, c1=c1, c2=c2))
+    }
+  }
+  
+  return(results22)
+}
+
+# Parameters
+alpha <- 0
+beta <- 1 # True treatment effect
+gamma2 <- 1 # Between-cluster variance
+c1 <- 10 # Cost of the first sample in a cluster
+c2 <- 5 # Cost of additional samples in the same cluster
+B <- 1000 # Budget
+n_sim <- 100 # Number of simulations
+
+# Design grid
+G <- seq(5, 50, by = 5) # Number of clusters
+R <- seq(2, 20, by = 2) # Observations per cluster
+
+# Evaluate designs
+results22 <- evaluate_design(G, R, alpha, beta, gamma2, c1, c2, B, n_sim)
+
+# Visualize results
+ggplot(results22, aes(x = G, y = mse, color = factor(R))) +
+  geom_line() +
+  labs(title = "Mean Squared Error (MSE) by Number of Clusters and Observations",
+       x = "Number of Clusters (G)",
+       y = "Mean Squared Error (MSE)",
+       color = "Observations per Cluster (R)") +
+  theme_minimal()
+
+results2 <- evaluate_design(G, R, alpha, 20, gamma2, sigma2, c1, c2, B, n_sim)
+
+ggplot(results2, aes(x = G, y = mse, color = factor(R))) +
+  geom_line() +
+  labs(title = "Mean Squared Error (MSE) by Number of Clusters and Observations",
+       x = "Number of Clusters (G)",
+       y = "Mean Squared Error (MSE)",
+       color = "Observations per Cluster (R)") +
+  theme_minimal()
+
+write.csv(full_grid, "simulation_results_with_assumptions.csv", row.names = FALSE)
+
+MSE are going to be alot higher because Mu is exponentiated 
+
+Vary C1 and C2
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Aim 2
+```{r}
+# Function to evaluate designs for different parameters with error handling
+explore_parameters_fixed <- function(gamma2_vals, sigma2_vals, c_ratios, alpha, beta, c1, B, n_sim) {
+  results <- data.frame(
+    gamma2 = numeric(), sigma2 = numeric(), c_ratio = numeric(),
+    G_opt = integer(), R_opt = integer(), mse_opt = numeric()
+  )
+  
+  for (gamma2 in gamma2_vals) {
+    for (sigma2 in sigma2_vals) {
+      for (c_ratio in c_ratios) {
+        c2 <- c1 / c_ratio
+        
+        # Initialize variables to track the best design
+        best_mse <- Inf
+        best_G <- NA
+        best_R <- NA
+        
+        for (G in seq(5, 50, by = 5)) {
+          for (R in seq(2, 20, by = 2)) {
+            # Check budget constraint
+            total_cost <- G * c1 + G * (R - 1) * c2
+            if (total_cost > B) next
+            
+            beta_estimates <- numeric(n_sim)
+            valid_simulations <- 0
+            
+            for (sim in 1:n_sim) {
+              data <- simulate_data(G, R, alpha, beta, gamma2, sigma2)
+              
+              # Fit linear mixed-effects model with error handling
+              model <- tryCatch({
+                lmer(Y ~ X + (1 | cluster), data = data)
+              }, error = function(e) NULL)
+              
+              # Skip iteration if model fails or is singular
+              if (is.null(model) || isSingular(model)) next
+              
+              # Extract beta estimate
+              beta_estimates[sim] <- fixef(model)["X"]
+              valid_simulations <- valid_simulations + 1
+            }
+            
+            # Skip designs with insufficient valid simulations
+            if (valid_simulations < n_sim / 2) next
+            
+            # Compute performance metrics
+            beta_estimates <- na.omit(beta_estimates)
+            bias <- mean(beta_estimates - beta, na.rm = TRUE)
+            variance <- var(beta_estimates, na.rm = TRUE)
+            mse <- bias^2 + variance
+            
+            # Update best design if MSE improves
+            if (!is.na(mse) && mse < best_mse) {
+              best_mse <- mse
+              best_G <- G
+              best_R <- R
+            }
+          }
+        }
+        
+        # Store results
+        results <- rbind(results, data.frame(
+          gamma2 = gamma2, sigma2 = sigma2, c_ratio = c_ratio,
+          G_opt = best_G, R_opt = best_R, mse_opt = best_mse
+        ))
+      }
+    }
+  }
+  
+  return(results)
+}
+
+# Re-run the analysis
+parameter_results_fixed <- explore_parameters_fixed(gamma2_vals, sigma2_vals, c_ratios, alpha, beta, c1, B, n_sim)
+
+# Visualize results
+ggplot(parameter_results_fixed, aes(x = gamma2, y = sigma2, fill = G_opt)) +
+  geom_tile() +
+  facet_wrap(~ c_ratio, labeller = label_both) +
+  labs(title = "Optimal Number of Clusters (G) by Variance Parameters and Cost Ratios",
+       x = "Between-Cluster Variance (gamma2)",
+       y = "Within-Cluster Variance (sigma2)",
+       fill = "Optimal G") +
+  theme_minimal()
+```
