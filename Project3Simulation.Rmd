@@ -1,15 +1,55 @@
 ---
-title: "Simulation Models"
+title: "Constrained Budget Simulation Model Project"
 author: "Diahmin Hawkins dlh2166@columbia.edu"
 date: "12/2/2024"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE,
+                      message = FALSE,
+                      echo = FALSE,
+                      fig.align = "center")
+
+
+
+```
+
+```{r}
+#Packages
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(visdat)
+library(kableExtra)
+library(knitr)
+library(gridExtra)
+library(ggridges)
+library(gt)
+library(ggwordcloud)
+library(ggplot2)
+library(magick)  
+library(ggplot2)
+library(corrplot) 
+library(reshape2)
+library(readr)
+library(lme4)
+library(tinytex)
+
+```
+
+
+
+
+
+
 ```{r, eval=FALSE}
 
 library(ggwordcloud)
 library(ggplot2)
 library(magick)  
-
+library(ggplot2)
 
 # Path to your image
 fig_path <- "/Users/diahminhawkins/Documents/GitHub/Project3/Hospitals.png"
@@ -54,14 +94,12 @@ ggplot(new_frame, aes(label = words, size = frequencies)) +
 
 
 
-
-
 # Introduction 
-Cluster randomized trial is a randomized controlled trial where individuals are randomly assigned into groups called clusters. This paper presents a collaborative effort with Dr. Zhijin Wu from the Biostatistics Department at Brown Universityto address a fundamental challenge in experimental design: how to allocate resources optimally under budget constraints to maximize the precision of treatment effect estimation.We will consider a cluster randomized trial in which we will assign observations to either the control or treatment group and our goal is to estimate the treatment effect on an outcome variable Y.
+Cluster randomized trials are randomized controlled trials where individuals are randomly assigned into groups called clusters. This paper presents a collaborative effort with Dr. Zhijin Wu from the Biostatistics Department at Brown University to address a fundamental challenge in experimental design: how to allocate resources optimally under budget constraints to maximize the precision of treatment effect estimation.We will consider a cluster randomized trial in which we will assign observations to either the control or treatment group and our goal is to estimate the treatment effect on an outcome variable Y.
 
-Our focus is on designing a simulation study to investigate optimal experimental design strategies for cluster randomized trials under budget constraints. More Specifically, we aim to determine the ideal allocation of resources between the number of clusters and the number of observations within each cluster, given a fixed budget \( B \). While we consider \( B \) in monetary terms, a key feature of our framework is the cost structure: the initial sample from a cluster incurs a higher cost (\( c_1 \)), while subsequent samples within the same cluster are relatively cheaper (\( c_2 < c_1 \)). 
+Our focus is on designing a simulation study to investigate optimal experimental design strategies for cluster randomized trials under budget constraints. More specifically, we aim to determine the ideal allocation of resources between the number of clusters and the number of observations within each cluster, given a fixed budget \( B \). While we consider \( B \) in monetary terms, a key feature of our framework is the cost structure: the initial sample from a cluster incurs a higher cost (\( c_1 \)), while subsequent samples within the same cluster are relatively cheaper (\( c_2 < c_1 \)). 
 
-An additional consideration in our design is the inherent correlation among samples within the same cluster. While increasing the number of observations per cluster can reduce costs, the correlated nature of these observations may diminish their marginal contribution to the precision of treatment effect estimation. In other words,  while samples from the same cluster are cheaper , samples within a cluster may be correlated. In consideration of sequencing data, samples within a cluster might correspond to collecting technical replicates(repeated measurements from ....) and different clusters correspond to biological replicates( measurements from different samples) .echnical replicates are cheaper to obtain but are highly correlated.Our simulation study will explore this tradeoff and provide insights into the optimal balance between cluster size and cluster number, with the goal of maximizing efficiency while adhering to resource constraints.  
+An additional consideration in our design is the inherent correlation among samples within the same cluster. While increasing the number of observations per cluster can reduce costs, the correlated nature of these observations may diminish their marginal contribution to the precision of treatment effect estimation. In other words,  while samples from the same cluster are cheaper , samples within a cluster may be correlated. In consideration of sequencing data, samples within a cluster might correspond to collecting technical replicates(repeated measurements) and different clusters correspond to biological replicates(measurements from different samples).Technical replicates are cheaper to obtain but are highly correlated.Our simulation study will explore this tradeoff and provide insights into the optimal balance between cluster size and cluster number, with the goal of maximizing efficiency while adhering to resource constraints.  
 
 In this study, we will focus on three aims:
 *Aim 1*: Design a simulation study using the ADEMP framework from class to evaluate potential study designs,
@@ -80,102 +118,45 @@ By leveraging simulation-based methods, we aim to contribute to the development 
 The methods used in this the ADEMP framework. The ADEMP Framework is a structured approach used in simulation models that stands for Aims, Data-generating mechanisms, Methods, Estimands, Performance measures. The *Aims* of this study consists of :
 *Aim 1*: Design a simulation study using the ADEMP framework from class to evaluate potential study designs.
 *Aim 2*: Explore relationships between the underlying data generation mechanism parameters and the relative costs  (\( c_2 /c_1 \)) and how these impact the optimal study design.
-*Aim 3*: Extend your simulation study to the setting in which Y follows a Poisson distribution with mean $\mu_i$\ and explore how this impacts the results. The hierarchical model for this setting is given below.
-The *Data-generagting mechanism* used in this study is a randomized cluster trial with assigned treatment groups using simulated data. To start this analysis, we will consider Y to be normally distributed.For the observation r(r=1,...,R for repeated observations) in cluster g(g=1,...,G groups). The $\X_i$\ be a binary indicator of whether or not cluster g is assigned to treatment group (0= control, 1= treatment) and let Y be the observed outcome. To estimate the treatment effect, we will assume a hierarchical model for Y where
-$\mu_{i0}$\ = $\alpha$\ + $\beta$\ $X_i$\ fixed effect, $\mu_{i0}$=$\alpha$+ $\beta$
+*Aim 3*: Extend your simulation study to the setting in which Y follows a Poisson distribution with mean $\mu_i$ and explore how this impacts the results. The hierarchical model for this setting is given below.
+The *Data-generating mechanism* used in this study is a randomized cluster trial with assigned treatment groups using simulated data. To start this analysis, we will consider Y to be normally distributed.For the observation r(r=1,...,R for repeated observations) in cluster g(g=1,...,G groups). The $X_i$ be a binary indicator of whether or not cluster g is assigned to treatment group (0= control, 1= treatment) and let Y be the observed outcome. To estimate the treatment effect, we will assume a hierarchical model for Y where
+$\mu_{i0}$ = $\alpha$ + $\beta$ $X_i$ fixed effect, $\mu_{i0}$=$\alpha$+ $\beta$
 $\mu_{i}$|$\epsilon_{i}$= $\mu_{i0}$ + $\epsilon_{i}$ with $\epsilon_{i}$~N(0,$\gamma^2$), or in other words $\mu_{i}$ ~ N($\mu_{i0}$,$\gamma^2$)
-$\Y_{rg}$\|$\mu_{i}$ + $\epsilon_{rg}$ with $\epsilon_{rg}$~iid N(0,$\sigma^2$).
+$Y_{rg}$|$\mu_{i}$ + $\epsilon_{rg}$ with $\epsilon_{rg}$~iid N(0,$\sigma^2$).
 
 This means that the marginal mean of $Y_{rg}$ is E($Y_{rg}$| $X_{i}$)= $\alpha$ + $\beta$ $X_{i}$ and the conditional mean given $\epsilon_{i}$ is E($Y_{rj}$|$X_i$,$\epsilon_{i}$)=$\alpha$ + $\beta$+ $X_{i}$+ $\epsilon_{i}$. The estimate of $\beta$ will be our estimate of the average treatment effect and is our parameter of interest. 
 
 For *Aim 3* , each cluster g, we have 
 log($\mu_{i}$)~ N ($\alpha$ + $\beta$ $X_I$,$\gamma^2$). We observe the conditionally independent units (r=1,...R) withinh the cluster 
 $Y_{rg}$|$\mu_i$ ~ Poisson($\mu_i$). The sum of iid Poisson random variables is still Poisson therefore we have the simplified model $Y_r$|$\mu_r$~Poisson(R$\mu_i$).
-Methods: The methods used in this simulation model is a normally distributed linear regression model for Aim 1 with a factorial design that varies different parameters($\beta$, $\gamma$,$\sigma$).In Aim 2, we will vary the ratios of (\( c_2 /c_1 \)). In Aim 3, we will  use a poisson regression model to represent an extension of the hierarchical model to handle the outcomes $Y_rj$ in a count base way, rather than countinous
 
+*Methods*: The methods used in this simulation model is a normally distributed linear regression model for Aim 1 with varying factors that varies different parameters( $\gamma$ and $\sigma$). We will vary ( $\gamma$ and $\sigma$)  because these parameters directly influence the behavior of the clustering structure, precision of estimates, and design considerations. In Aim 2, we will vary the ratios of (\( c_2 /c_1 \)) to see how the total cost is impacted. Varying $c1$ (cost per cluster) and $c2$ (cost per additional individual within a cluster) in this simulation modelbecause it assists with resource allocations, optimizing study design, and help maxing out our constrained budget. These costs directly impact the total cost of the study and guide decisions on whether to prioritize increasing the number of clusters (G) or the number of individuals per cluster (R). In Aim 3, we will  use a poisson regression model to represent an extension of the hierarchical model to handle the outcomes $Y_rj$ in a count base way, rather than countinous
 
-The performance measures used in this study is the mean square error and the bias. We will also be observing the correlation between observations using the ICC, senstivity to cost ratios (c1/c2) and the design efficiency.
-
-
-
+*Performance Measures*: The performance measures we will be evaluating in this study is the ICC,variance, and cost efficiency. We will also be observing the correlation between observations using the ICC,cost efficieny, and the design efficiency by finding the optimal design.
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-eij is the patient variation within hospitals 
-mi cluster specific mean
-number patients be a multiple of multiple cluster I have
-
-
-is changibg alpha or beta going to impact results (alpha is just a coeffient/intercept
-                                                              if change intercept will it impact results) if impact results (what is the range it will  have impact) if it doesnt change you dont have to worry about it  (look at alpha and see if it change s)
-
-
+# Results
 
 # Aim 1
-```{r}
-#Xi<- list()
-#Mi<- list()
-#Yi<- list()
-#Mio<- list()
-
-aim1_function<- function(R, G,sigma,gamma,alpha,beta){
-R<-1000 # NUMBER OF OBSERVATIONS TAKEN FROM EACH CLUSTER
-G<- 400  #number of clusters (how many clusters)
-gamma<-1
-sigma<-1
-alpha<-100 
-beta<-200
-eij<- rnorm(G*R,0,sigma) 
-epsilon<- rnorm(G,0,gamma) #how they differ from one another
-Xi<- round(runif(400, min= 0, max = 1))
-Mio<- alpha + beta * Xi
-Mi<- Mio + epsilon
-GxR<-rep(Mi,each=R) # want the Mi value to be same amount numbers to correspond to the R value
-Yi<- GxR + eij
-return( 
-  list(Xi, Mi, Yi, Mio))
-}
-
-aim1_function(100,2,.5,.3,12,6)
-
-#Budget Constraints
-
-budget_con<-300
-what the 
-cost of the sample from the cluster and cost of sample from other clusters
-check values for C1 and C2
 
 
-G and R are going to change a bit
-```
- what is the optimal G and R?
- How do I use simulation 
- How does the optinal strategy change using c1 and c2? (tabke and figures how changing these parameters impact these results )
+## Linear Regression Model
+```{r, warnings=FALSE, message=FALSE}
 
-```{r}
-# Load necessary packages
-library(lme4) # For linear mixed-effects model
-library(ggplot2) # For visualization
+
 
 set.seed(222)
-# Function to simulate data
+# Simulate data for linear regression model
+#
+# param G: number of clusters
+# param R: number of observations within a cluster 
+# param alpha: intercept
+# param beta: true treatment effect
+# param gamma2: between cluster variance
+# param sigma2: within cluster variance
+# param treatment_prob: treatment assignment
 simulate_data <- function(G, R, alpha, beta, gamma2, sigma2, treatment_prob = 0.5) {
   # Generate cluster-level treatment assignment
   X <- rbinom(G, 1, treatment_prob) # Randomly assign treatment (1) or control (0) to clusters
@@ -196,8 +177,8 @@ simulate_data <- function(G, R, alpha, beta, gamma2, sigma2, treatment_prob = 0.
 }
 
 # Function to evaluate designs
-evaluate_design <- function(G, R, alpha, beta, gamma2, sigma2, c1, c2, B, n_sim) {
-  results <- data.frame(G = integer(), R = integer(), bias = numeric(), variance = numeric(), mse = numeric())
+evaluate_design <- function(G, R, alpha, beta, gamma2, sigma2, c1, c2, B, n_sim, total_cost) {
+  results <- data.frame(G = integer(), R = integer(),X= integer(), c1= numeric(), c2= numeric(), B= numeric(), gamma2=numeric(), sigma2= numeric(),variance = numeric(),icc= numeric(), cost_efficiency= numeric())
   
   for (g in G) {
     for (r in R) {
@@ -216,307 +197,794 @@ evaluate_design <- function(G, R, alpha, beta, gamma2, sigma2, c1, c2, B, n_sim)
       }
       
       # Calculate performance metrics
-      bias <- mean(beta_estimates - beta, na.rm=T)
-      variance <- var(beta_estimates,na.rm=T)
-      mse <- bias^2 + variance
+     
+      variance <- var(beta_estimates,na.rm=T) 
+      random_effects_variance <- as.numeric(VarCorr(model)$cluster[1])  # gamma^2
+      residual_variance <- attr(VarCorr(model), "sc")^2  # sigma^2
+
+# Calculate ICC
+icc <- random_effects_variance / (random_effects_variance + residual_variance)
+      # Calculate cost efficiency
+      precision <- 1 / variance
+      cost_efficiency <- precision / total_cost
       
+      #Dont need the mse aand bias because it is an unbiased estimator 
       # Store results
-      results <- rbind(results, data.frame(G = g, R = r, bias = bias, variance = variance, mse = mse, beta=beta, alpha=alpha, c1=c1, c2=c2))
+      results <- rbind(results, data.frame(G = g, R = r, variance = variance,  beta=beta, alpha=alpha, c1=c1, c2=c2, total_cost= total_cost, cost_efficiency=cost_efficiency, icc=icc, B=B, gamma2=gamma2, sigma2=sigma2, precision=precision)) #(bias=bias),#mse=mse
     }
   }
+
   
   return(results)
 }
 
-# Parameters
+
+
+# Fixed Parameters
 alpha <- 0
 beta <- 1 # True treatment effect
+
+
+# Varying Parameters
 gamma2 <- 1 # Between-cluster variance
 sigma2 <- 1 # Within-cluster variance
 c1 <- 10 # Cost of the first sample in a cluster
 c2 <- 5 # Cost of additional samples in the same cluster
-B <- 1000 # Budget
+B <- 10000 # Budget
 n_sim <- 100 # Number of simulations
-
 # Design grid
-G <- seq(5, 50, by = 5) # Number of clusters
-R <- seq(2, 20, by = 2) # Observations per cluster
-
+G <- seq(5, 100, by = 5) # Number of clusters
+R<-floor((((B/G)-c1)/c2)+1)
 # Evaluate designs
-results <- evaluate_design(G, R, alpha, beta, gamma2, sigma2, c1, c2, B, n_sim)
+results <- evaluate_design(G, R, alpha, beta, gamma2, sigma2, c1, c2, B, n_sim, total_cost)
 
-# Visualize results
-ggplot(results, aes(x = G, y = mse, color = factor(R))) +
-  geom_line() +
-  labs(title = "Mean Squared Error (MSE) by Number of Clusters and Observations",
-       x = "Number of Clusters (G)",
-       y = "Mean Squared Error (MSE)",
-       color = "Observations per Cluster (R)") +
-  theme_minimal()
+write.csv(results,"~/Documents/GitHub/Project3/project3data.csv", row.names=FALSE)
 
-results2 <- evaluate_design(G, R, alpha, 20, gamma2, sigma2, c1, c2, B, n_sim)
-
-ggplot(results2, aes(x = G, y = mse, color = factor(R))) +
-  geom_line() +
-  labs(title = "Mean Squared Error (MSE) by Number of Clusters and Observations",
-       x = "Number of Clusters (G)",
-       y = "Mean Squared Error (MSE)",
-       color = "Observations per Cluster (R)") +
-  theme_minimal()
-
-
-alpha is intercept
-true treatment effects
-X is assignment group
-
-
-find optimal number of clusters (elbow)
-factorial design (change all of them )
-hierarchical design ( most important )
-
-View(results)
-```
-```{r}
-# Evaluate designs
-results <- evaluate_design(G, R, alpha, beta, gamma2, sigma2, c1, c2, B, n_sim)
-
-# Visualize results
-ggplot(results, aes(x = G, y = mse, color = factor(R))) +
-  geom_line() +
-  labs(title = "Mean Squared Error (MSE) by Number of Clusters and Observations",
-       x = "Number of Clusters (G)",
-       y = "Mean Squared Error (MSE)",
-       color = "Observations per Cluster (R)") +
-  theme_minimal()
-
-
+project3data <- read_csv("project3data.csv")
 
 
 ```
+
+
+# Reached or Came Close to Maximum Budget
+The table presents a summary of optimization results under budget constraints, highlighting variables related to cost efficiency, group sizes (G), and sample sizes per group (R), among other factors. As G (number of groups) increases,R (sample size per group) generally decreases to maintain total cost constraints, with the variance of the response (variance) and intraclass correlation coefficient (ICC) also varying correspondingly. The total cost is consistently close to the budget cap of 10,000, ensuring the constraints are met. Cost efficiency generally improves (lower values of cost_efficiency) with moderate combinations of G and R, peaking around intermediate values such as G=40, R=49. The ICC ranges from approximately 0 to 0.7497686, indicating varying levels of within-group correlation. This table reflects the trade-offs between group size, sample size, and variance to achieve optimal resource allocation under strict budget constraints.
 ```{r}
-Poiss
+# Define the budget and tolerance
+B <- 10000
+tolerance <- 9999  # Define how close you consider "close to the budget"
+
+# Rows that exactly match the budget
+exact_budget <- subset(results, total_cost == B)
+
+# Rows that are close to the budget within the tolerance
+close_to_budget <- subset(results, abs(total_cost - B) <= tolerance)
+
+# Combine both results and remove duplicates
+combined_results <- unique(rbind(exact_budget, close_to_budget))
+
+
+
+results_filtered <- subset(results, total_cost >= 9000)
+
+# Display the filtered results
+results_filtered%>%
+ kbl(caption = "Closeness to Maximized Budget Constraints") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+
+plot1<-ggplot(results_filtered, aes(x = G, y = variance)) +
+  geom_line() +
+  labs(title = "Variance by Number of Clusters and Observations",
+       x = "Number of Clusters (G)",
+       y = "Variance",
+       color = "Observations per Cluster (R)") +
+  theme_minimal()
+plot1
+
+
+```
+
+
+
+
+# Optimal Design 
+The first plot illustrates the relationship between the number of clusters (\( G \)) and the variance of the treatment effect estimate. Variance decreases significantly as the number of clusters increases, with a sharp decline up to around \( G = 25 \), after which the reduction becomes more gradual and stabilizes around \( G = 80 \). This stabilization suggests diminishing returns in variance reduction as \( G \) increases. The optimal cluster size is identified as \( G = 80 \), marked with a red dashed line, where variance is sufficiently low, balancing precision with the associated costs.
+
+From the data table, the optimal configuration consists of \( G = 80 \) clusters, each with \( R = 19 \) individuals per cluster. This configuration yields a low variance of 0.035, a high cost efficiency of 0.0035, and an intraclass correlation coefficient (ICC) of 0.487, indicating a balanced contribution of between-cluster variance to the total variance. The total cost for this design is \$8000, which is well within the specified budget constraint of \$10,000. This result underscores the importance of optimizing \( G \) and \( R \) to achieve precise estimates at a manageable cost.
+```{r}
+# Finding the optimal variance
+optimal_row <- results[which.min(results$variance), ]
+
+# Print optimal values
+print(optimal_row)
+
+# Plotting variance vs optimal cluster
+library(ggplot2)
+plot3<-ggplot(results, aes(x = G, y = variance)) +
+  geom_line(color = "blue") +
+  geom_point(color = "darkblue") +
+  geom_vline(xintercept = optimal_row$G, linetype = "dashed", color = "red") +
+  annotate("text", x = optimal_row$G + 20, y = max(results$variance), 
+           label = paste0("Optimal Cluster: ", optimal_row$G), color = "red", angle = 90, hjust = 1) +
+  labs(title = "Variance vs Optimal Cluster (G)", x = "G", y = "Variance") +
+  theme_minimal()
+
+plot3
+
+
+```
+
+
+
+# Correlation within Clusters
+
+The boxplot illustrates the distribution of the response variable Y across five distinct clusters, revealing noticeable differences in central tendency and variability. Cluster 3 has the lowest median, indicating it tends to have lower responses, while Cluster 4 exhibits the highest median, suggesting higher responses in that group. Variability is greatest in Cluster 1, with a wide range and several outliers, whereas Cluster 3 shows the least variability, with a more concentrated distribution. Outliers are present in all clusters except Cluster 4, indicating some extreme values that deviate from the primary distribution. Comparatively, Clusters 4 and 5 have relatively similar IQRs and higher medians, but Cluster 4's distribution is slightly shifted upward.
+```{r}
+# Extract ICC values from the results
+icc_values <- results %>%
+  select(G, R, icc) %>%
+  distinct()  # Remove duplicates to view unique ICC values
+
+
+
+# Simulate data with clusters
 set.seed(222)
-# Function to simulate data
-simulate_data <- function(G, R, alpha, beta, gamma2, sigma2, treatment_prob = 0.5) {
-  # Generate cluster-level treatment assignment
-  X <- rbinom(G, 1, treatment_prob) # Randomly assign treatment (1) or control (0) to clusters
-  
-  # Generate cluster-level random effects
-  epsilon <- rnorm(G, mean = 0, sd = sqrt(gamma2))
-  
-  # Generate individual-level observations
-  data <- data.frame(
-    cluster = rep(1:G, each = R),
-    X = rep(X, each = R)
-  )
-  
-  epsilon <- rep(epsilon, each = R) #(data should only have x and y and g)
-  Mu<- exp(alpha + beta * X + epsilon)
-  data$Y <- with(data,  rpois(n = nrow(data), lambda = Mu))
-  
-  return(data)
-}
+simulated_data <- simulate_data(G, R = R, alpha = 0, beta = 1, gamma2 = 1, sigma2 = 1)
 
-# Function to evaluate designs
-evaluate_design2 <- function(G, R, alpha, beta, gamma2, c1, c2, B, n_sim) {
-  results <- data.frame(G = integer(), R = integer(), bias = numeric(), variance = numeric(), mse = numeric())
-  
-  for (g in G) {
-    for (r in R) {
-      # Check budget constraint
-      total_cost <- g * c1 + g * (r - 1) * c2
-      if (total_cost > B) next # Skip if over budget ( they will always be cheaper than thge first sample)
-      
-      beta_estimates <- numeric(n_sim)
-      
-      for (sim in 1:n_sim) {
-        data <- simulate_data(G = g, R = r, alpha = alpha, beta = beta, gamma2 = gamma2)
-        
-        # Fit linear mixed-effects model
-        model <- glmer(Y ~ X + (1 | cluster), data = data, family= poisson)
-        beta_estimates[sim] <- fixef(model)["X"] # Extract estimate for beta
-      }
-      
-      # Calculate performance metrics
-      bias <- mean(beta_estimates - beta, na.rm=T)
-      variance <- var(beta_estimates,na.rm=T)
-      mse <- bias^2 + variance
-      
-      # Store results
-      results22 <- rbind(results, data.frame(G = g, R = r, bias = bias, variance = variance, mse = mse, beta=beta, alpha=alpha, c1=c1, c2=c2))
-    }
-  }
-  
-  return(results22)
-}
 
-# Parameters
-alpha <- 0
-beta <- 1 # True treatment effect
-gamma2 <- 1 # Between-cluster variance
-c1 <- 10 # Cost of the first sample in a cluster
-c2 <- 5 # Cost of additional samples in the same cluster
-B <- 1000 # Budget
-n_sim <- 100 # Number of simulations
-
-# Design grid
-G <- seq(5, 50, by = 5) # Number of clusters
-R <- seq(2, 20, by = 2) # Observations per cluster
-
-# Evaluate designs
-results22 <- evaluate_design(G, R, alpha, beta, gamma2, c1, c2, B, n_sim)
-
-# Visualize results
-ggplot(results22, aes(x = G, y = mse, color = factor(R))) +
-  geom_line() +
-  labs(title = "Mean Squared Error (MSE) by Number of Clusters and Observations",
-       x = "Number of Clusters (G)",
-       y = "Mean Squared Error (MSE)",
-       color = "Observations per Cluster (R)") +
+# Scatter plot of Y grouped by cluster
+ggplot(simulated_data, aes(x = cluster, y = Y, group = cluster)) +
+  geom_boxplot(aes(fill = factor(cluster))) +
+  labs(
+    title = "Boxplot of the Response Variable Y by Cluster",
+    x = "Cluster",
+    y = "Response (Y)"
+  ) +
   theme_minimal()
-
-results2 <- evaluate_design(G, R, alpha, 20, gamma2, sigma2, c1, c2, B, n_sim)
-
-ggplot(results2, aes(x = G, y = mse, color = factor(R))) +
-  geom_line() +
-  labs(title = "Mean Squared Error (MSE) by Number of Clusters and Observations",
-       x = "Number of Clusters (G)",
-       y = "Mean Squared Error (MSE)",
-       color = "Observations per Cluster (R)") +
-  theme_minimal()
-
-write.csv(full_grid, "simulation_results_with_assumptions.csv", row.names = FALSE)
-
-MSE are going to be alot higher because Mu is exponentiated 
-
-Vary C1 and C2
 ```
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Aim 2
+This boxplot illustrates the distribution of the response variable Y across five clusters, stratified by treatment group (0 and 1), providing insights into the relationship between clusters and treatment effects. The variation in median values and spread within each cluster suggests potential differences in how clusters are correlated with the response variable. For Cluster 1, the treatment group (1) shows a higher median and greater variability compared to the control group (0), indicating a possible treatment effect within this cluster. Cluster 2 exhibits a narrower gap between the groups, with similar variability, suggesting weaker differentiation between treatment and control groups. In Cluster 3, the medians overlap substantially, implying minimal correlation between treatment and response. Clusters 4 and 5 display more distinct separation between treatment and control groups, with treatment group medians consistently higher, suggesting a stronger treatment effect in these clusters. These patterns highlight that treatment effects may vary significantly by cluster, indicating that cluster membership is correlated with the response and may influence the efficacy of the treatment. 
 ```{r}
-# Function to evaluate designs for different parameters with error handling
-explore_parameters_fixed <- function(gamma2_vals, sigma2_vals, c_ratios, alpha, beta, c1, B, n_sim) {
-  results <- data.frame(
-    gamma2 = numeric(), sigma2 = numeric(), c_ratio = numeric(),
-    G_opt = integer(), R_opt = integer(), mse_opt = numeric()
-  )
-  
-  for (gamma2 in gamma2_vals) {
-    for (sigma2 in sigma2_vals) {
-      for (c_ratio in c_ratios) {
-        c2 <- c1 / c_ratio
-        
-        # Initialize variables to track the best design
-        best_mse <- Inf
-        best_G <- NA
-        best_R <- NA
-        
-        for (G in seq(5, 50, by = 5)) {
-          for (R in seq(2, 20, by = 2)) {
-            # Check budget constraint
-            total_cost <- G * c1 + G * (R - 1) * c2
-            if (total_cost > B) next
-            
-            beta_estimates <- numeric(n_sim)
-            valid_simulations <- 0
-            
-            for (sim in 1:n_sim) {
-              data <- simulate_data(G, R, alpha, beta, gamma2, sigma2)
-              
-              # Fit linear mixed-effects model with error handling
-              model <- tryCatch({
-                lmer(Y ~ X + (1 | cluster), data = data)
-              }, error = function(e) NULL)
-              
-              # Skip iteration if model fails or is singular
-              if (is.null(model) || isSingular(model)) next
-              
-              # Extract beta estimate
-              beta_estimates[sim] <- fixef(model)["X"]
-              valid_simulations <- valid_simulations + 1
-            }
-            
-            # Skip designs with insufficient valid simulations
-            if (valid_simulations < n_sim / 2) next
-            
-            # Compute performance metrics
-            beta_estimates <- na.omit(beta_estimates)
-            bias <- mean(beta_estimates - beta, na.rm = TRUE)
-            variance <- var(beta_estimates, na.rm = TRUE)
-            mse <- bias^2 + variance
-            
-            # Update best design if MSE improves
-            if (!is.na(mse) && mse < best_mse) {
-              best_mse <- mse
-              best_G <- G
-              best_R <- R
-            }
-          }
-        }
-        
-        # Store results
-        results <- rbind(results, data.frame(
-          gamma2 = gamma2, sigma2 = sigma2, c_ratio = c_ratio,
-          G_opt = best_G, R_opt = best_R, mse_opt = best_mse
-        ))
-      }
-    }
-  }
-  
-  return(results)
-}
-
-# Re-run the analysis
-parameter_results_fixed <- explore_parameters_fixed(gamma2_vals, sigma2_vals, c_ratios, alpha, beta, c1, B, n_sim)
-
-# Visualize results
-ggplot(parameter_results_fixed, aes(x = gamma2, y = sigma2, fill = G_opt)) +
-  geom_tile() +
-  facet_wrap(~ c_ratio, labeller = label_both) +
-  labs(title = "Optimal Number of Clusters (G) by Variance Parameters and Cost Ratios",
-       x = "Between-Cluster Variance (gamma2)",
-       y = "Within-Cluster Variance (sigma2)",
-       fill = "Optimal G") +
+ggplot(simulated_data, aes(x = factor(cluster), y = Y, fill = factor(X))) +
+  geom_boxplot() +
+  labs(
+    title = "Boxplot of Response (Y) by Cluster and Treatment Group",
+    x = "Cluster",
+    y = "Response (Y)",
+    fill = "Treatment Group"
+  ) +
   theme_minimal()
+
+
 ```
+
+
+# Highest ICC
+
+The results indicate that with \( G = 5 \) clusters and \( R = 32 \) individuals per cluster, the total variance of the outcome variable is \( 0.853 \), and the intraclass correlation coefficient (ICC) is \( 0.749 \). The high ICC suggests that approximately 74.9% of the total variance is due to between-cluster variability, with only about 25.1% arising from within-cluster differences. This highlights a strong correlation among observations within the same cluster. The precision, calculated as \( 1/\text{variance} \), is \( 1.172 \), reflecting the accuracy of the treatment effect estimate under this design. The total cost of the design is \$825, demonstrating cost-efficiency (\( 0.00142 \)), given the high ICC and the large proportion of between-cluster variation.
+
+In the context of this study, the high ICC underscores the importance of accounting for clustering effects in the analysis to avoid underestimating standard errors and overinflating the significance of findings. It also suggests that increasing the number of clusters (\( G \)) rather than adding more individuals per cluster (\( R \)) would be a more effective strategy for improving precision, as additional observations within a cluster contribute less unique information. This design balances cost considerations with sufficient precision, making it an appropriate choice for studies where between-cluster variability dominates. These insights can guide future decisions on allocating resources and optimizing study designs.
+
+
+
+```{r}
+set.seed(222)
+# Find cluster with the highest ICC
+most_relevant_cluster <- results %>%
+  arrange(desc(icc)) %>%  # Sort ICC in descending order
+  slice(1)  # Get the top row
+
+# Print the most relevant cluster
+print(most_relevant_cluster)
+
+# Simulate data for the most relevant cluster
+most_relevant <- simulate_data(G = most_relevant_cluster$G, R = most_relevant_cluster$R, 
+                                 alpha = 0, beta = 1, gamma2 = 1, sigma2 = 1)
+
+# Boxplot of the response variable by cluster
+most_relevant_boxplot<-ggplot(simulated_data, aes(x = factor(cluster), y = Y)) +
+  geom_boxplot(aes(fill = factor(cluster))) +
+  labs(
+    title = paste("Boxplot of Y by Cluster (G =", most_relevant_cluster$G, 
+                  ", R =", most_relevant_cluster$R, ")"),
+    x = "Cluster",
+    y = "Response (Y)"
+  ) +
+  theme_minimal()
+
+most_relevant_boxplot
+
+
+```
+
+# Least ICC
+
+This boxplot shows the distribution of the response variable Y across five clusters with the corresponding design parameters listed in the table, characterized by the lowest intra-class correlation coefficient (ICC = 0). The ICC of 0 indicates no correlation between observations within the same cluster, implying that all variance in Y is attributed to individual-level variation rather than group-level effects.
+
+The distributions vary notably across clusters, with Cluster 1 showing the highest median response and minimal spread, while Cluster 4 has a notably lower median and larger variability. Clusters 2 and 3 have relatively narrow ranges, suggesting limited dispersion in those groups. Despite these differences, the ICC of 0 indicates that these patterns are independent of within-cluster similarity, as no shared group-level effects influence Y. This setup reflects an environment where clustering may not significantly affect the response variable, focusing on individual-level predictors.
+
+The design parameters (G=5,R=20) and total cost (525) suggest that the design is cost-efficient ( cost_efficiency =0.0021), as resources are allocated effectively to balance variance and group size. Overall, this design is optimized for minimal group-level dependence, making it suitable for scenarios where individual-level characteristics are primary drivers of the response.
+
+
+```{r}
+set.seed(222)
+# Find cluster with the lowest ICC
+least_relevant_cluster <- results %>%
+  arrange(icc) %>%  # Sort ICC in ascending order
+  slice(1)  # Get the top row
+
+# Print the least relevant cluster
+print(least_relevant_cluster)
+
+
+# Simulate data for the most relevant cluster
+simulated_data2 <- simulate_data(G = least_relevant_cluster$G, R = least_relevant_cluster$R, 
+                                 alpha = 0, beta = 1, gamma2 = 1, sigma2 = 1)
+
+# Boxplot of the response variable by cluster
+ggplot(simulated_data2, aes(x = factor(cluster), y = Y)) +
+  geom_boxplot(aes(fill = factor(cluster))) +
+  labs(
+    title = paste("Boxplot of Y by Cluster (G =", least_relevant_cluster$G, 
+                  ", R =", least_relevant_cluster$R, ")"),
+    x = "Cluster",
+    y = "Response (Y)"
+  ) +
+  theme_minimal()
+
+
+```
+
+
+
+
+
+
+
+
+
+
+# Varied Gamma and Sigma
+
+## Gamma 3 Results
+This plot illustrates how cost efficiency varies with the number of clusters (\( G \)) for a fixed \(\gamma = 0.5\), across different sample sizes (\( R \)). Cost efficiency fluctuates significantly for smaller sample sizes (\( R = 19, 20, 25 \)), indicating sensitivity to changes in the number of clusters when within-cluster resources are limited. As \( R \) increases (e.g., \( R = 39, 43, 65 \)), the variability in cost efficiency reduces, suggesting more stable performance in resource allocation across different cluster sizes. For the largest values of \( R \) (e.g., \( R = 99, 132, 199 \)), cost efficiency remains consistently low, indicating optimal resource use with minimal sensitivity to cluster count.
+
+This plot demonstrates the impact of a fixed \(\sigma = 2\) (individual-level random effects variance) on cost efficiency across different numbers of clusters (\( G \)) and sample sizes per cluster (\( R \)). Cost efficiency fluctuates more for smaller \( R \) values ( \( R = 19, 20, 25 \)), reflecting sensitivity to cluster configurations when individual-level variability is prominent. As \( R \) increases, the fluctuations in cost efficiency stabilize, with larger \( R \) values ( \( R = 79, 99, 132 \)) showing consistently low cost efficiency values, indicating optimal resource utilization with minimal variability across different cluster counts.
+
+## Sigma 3 Results
+```{r, warning=FALSE, warning=FALSE}
+ set.seed(222)
+gamma3 <- 0.5 # Variance of cluster-level random effects
+sigma3<- 2 # Variance of individual-level random effects
+results_3 <- evaluate_design(G, R, alpha, beta, gamma3, sigma3, c1, c2, B, n_sim, total_cost )
+
+# Gamma Plot
+gamma_plot3<-ggplot(results_3, aes(x = G, y = cost_efficiency, color = as.factor(gamma3), group = as.factor(gamma3))) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~R, scales = "free_y") +
+  labs(
+    title = " Gamma 3: Impact of Different Gamma Values on Cost Efficiency",
+    x = "Number of Clusters (G)",
+    y = "Cost Efficiency",
+    color = "Gamma"
+  ) +
+  theme_minimal()
+
+gamma_plot3
+
+
+sigma_plot3<-ggplot(results_3, aes(x = G, y = cost_efficiency, color = as.factor(sigma3), group = as.factor(sigma3))) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~R, scales = "free_y") +
+  labs(
+    title = " Sigma 3:Impact of Different Sigma Values on Cost Efficiency",
+    x = "Number of Clusters (G)",
+    y = "Cost Efficiency",
+    color = "Sigma"
+  ) +
+  theme_minimal()
+
+sigma_plot3
+```
+## Optimal Results 3
+These results present the optimal the cluster which is 95.
+```{r}
+# Finding the optimal variance
+optimal_row3 <- results_3[which.min(results_3$variance), ]
+
+# Print optimal values
+print(optimal_row3)
+
+# Plotting variance vs optimal cluster
+library(ggplot2)
+plot4<-ggplot(results_3, aes(x = G, y = variance)) +
+  geom_line(color = "blue") +
+  geom_point(color = "darkblue") +
+  geom_vline(xintercept = optimal_row3$G, linetype = "dashed", color = "red") +
+  annotate("text", x = optimal_row3$G + 20, y = max(results_3$variance), 
+           label = paste0("Optimal Cluster: ", optimal_row3$G), color = "red", angle = 90, hjust = 1) +
+  labs(title = "Variance vs Optimal Cluster (G)", x = "G", y = "Variance") +
+  theme_minimal()
+
+plot4
+```
+# Gamma 4 Results 
+This plot illustrates the effect of \(\gamma = 2\) (variance of cluster-level random effects) on cost efficiency across varying cluster sizes (\( G \)) and sample sizes (\( R \)). For smaller \( R \) values (e.g., \( R = 19, 20, 25 \)), cost efficiency fluctuates significantly, indicating high sensitivity to changes in cluster size when cluster-level variance is substantial. As \( R \) increases (e.g., \( R = 79, 99, 132 \)), cost efficiency stabilizes at consistently low values, suggesting optimal resource allocation with reduced sensitivity to the number of clusters when within-cluster sample sizes are sufficient. 
+
+# Sigma 4 Results
+This plot explores the impact of \(\sigma = 3\) (individual-level random effects variance) on cost efficiency across varying cluster sizes (\( G \)) and sample sizes (\( R \)). For smaller \( R \) values (e.g., \( R = 19, 20, 25 \)), cost efficiency fluctuates significantly, indicating sensitivity to changes in \( G \), as higher individual-level variance increases the need for precise resource allocation. As \( R \) increases, the variability in cost efficiency stabilizes, with consistently lower values for larger \( R \) (e.g., \( R = 79, 99, 132 \)), reflecting optimal resource utilization and reduced sensitivity to cluster count when within-cluster sample sizes are sufficient. This pattern highlights that higher individual-level variance amplifies the influence of smaller sample sizes on cost efficiency, requiring careful balancing of cluster and sample size configurations.
+
+```{r}
+
+gamma4 <- 2 # Variance of cluster-level random effects
+sigma4<- 3 # Variance of individual-level random effects
+results_4<- evaluate_design(G, R, alpha, beta, gamma4, sigma4, c1, c2, B, n_sim, total_cost)
+
+# Gamma Plot
+gamma_plot4<-ggplot(results_4, aes(x = G, y = cost_efficiency, color = as.factor(gamma4), group = as.factor(gamma4))) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~R, scales = "free_y") +
+  labs(
+    title = " Gamma 4: Impact of Different Gamma Values on Cost Efficiency",
+    x = "Number of Clusters (G)",
+    y = "Cost Efficiency",
+    color = "Gamma"
+  ) +
+  theme_minimal()
+
+
+gamma_plot4
+#Sigma
+
+sigma_plot4<-ggplot(results_4, aes(x = G, y = cost_efficiency, color = as.factor(sigma4), group = as.factor(sigma4))) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~R, scales = "free_y") +
+  labs(
+    title = " Sigma 4:Impact of Different Sigma Values on Cost Efficiency",
+    x = "Number of Clusters (G)",
+    y = "Cost Efficiency",
+    color = "Sigma"
+  ) +
+  theme_minimal()
+
+
+sigma_plot4
+
+```
+
+#Optimal Results
+The optimal cluster is 80.
+```{r}
+
+
+# Finding the optimal variance
+optimal_row4<- results_4[which.min(results_4$variance), ]
+
+# Print optimal values
+print(optimal_row4)
+
+# Plotting variance vs optimal cluster
+
+plot4<-ggplot(results_4,aes(x = G, y = variance)) +
+  geom_line(color = "blue") +
+  geom_point(color = "darkblue") +
+  geom_vline(xintercept = optimal_row4$G, linetype = "dashed", color = "red") +
+  annotate("text", x = optimal_row4$G + 20, y = max(results_4$variance), 
+           label = paste0("Optimal Cluster: ", optimal_row4$G), color = "red", angle = 90, hjust = 1) +
+  labs(title = "Variance vs Optimal Cluster (G)", x = "G", y = "Variance") +
+  theme_minimal()
+
+plot4
+
+
+
+```
+
+# Gamma 5 Results 
+This plot shows the impact of \(\gamma = 3\) (cluster-level random effects variance) on cost efficiency across different cluster sizes (\( G \)) and sample sizes (\( R \)). For smaller \( R \) values (e.g., \( R = 19, 20, 25 \)), cost efficiency exhibits substantial variability, reflecting high sensitivity to changes in \( G \) due to increased cluster-level variance. As \( R \) increases (e.g., \( R = 79, 99, 132 \)), cost efficiency stabilizes at consistently lower values, indicating that larger sample sizes mitigate the effects of high cluster-level variance, leading to more efficient designs. These results highlight the importance of balancing \( G \) and \( R \) to optimize cost efficiency under significant cluster-level variability.
+
+# Sigma 5 Results
+This plot highlights the impact of \(\sigma = 4\) (individual-level random effects variance) on cost efficiency across varying cluster sizes (\( G \)) and sample sizes (\( R \)). For smaller \( R \) values (e.g., \( R = 19, 20, 25 \)), cost efficiency fluctuates significantly, reflecting sensitivity to both \(\sigma\) and cluster configuration, with high variability reducing resource optimization. As \( R \) increases (e.g., \( R = 79, 99, 132 \)), cost efficiency stabilizes at lower values, indicating improved efficiency and reduced sensitivity to \(\sigma\) as sample sizes grow. These results emphasize that larger individual-level variance amplifies inefficiencies at smaller sample sizes, making larger within-cluster sample sizes critical for achieving optimal designs.
+
+```{r}
+
+
+gamma5 <- 3 # Variance of cluster-level random effects
+sigma5<- 4# Variance of individual-level random effects
+results_5<- evaluate_design(G, R, alpha, beta, gamma5, sigma5, c1, c2, B, n_sim, total_cost)
+
+
+
+gamma_plot5<-ggplot(results_5, aes(x = G, y = cost_efficiency, color = as.factor(gamma5), group = as.factor(gamma5))) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~R, scales = "free_y") +
+  labs(
+    title = "Gamma 5: Impact of Different Gamma Values on Cost Efficiency",
+    x = "Number of Clusters (G)",
+    y = "Cost Efficiency",
+    color = "Gamma"
+  ) +
+  theme_minimal()
+
+gamma_plot5
+
+sigma_plot5<-ggplot(results_5, aes(x = G, y = cost_efficiency, color = as.factor(sigma5), group = as.factor(sigma5))) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~R, scales = "free_y") +
+  labs(
+    title = " Sigma 5:Impact of Different Sigma Values on Cost Efficiency",
+    x = "Number of Clusters (G)",
+    y = "Cost Efficiency",
+    color = "Sigma"
+  ) +
+  theme_minimal()
+
+sigma_plot5
+
+```
+
+##Optimal Results 5
+
+The optimal cluster is 90.
+```{r}
+# Finding the optimal variance
+optimal_row5<- results_5[which.min(results_5$variance), ]
+
+# Print optimal values
+print(optimal_row5)
+
+# Plotting variance vs optimal cluster
+
+plot5<-ggplot(results_5,aes(x = G, y = variance)) +
+  geom_line(color = "blue") +
+  geom_point(color = "darkblue") +
+  geom_vline(xintercept = optimal_row5$G, linetype = "dashed", color = "red") +
+  annotate("text", x = optimal_row5$G + 20, y = max(results_5$variance), 
+           label = paste0("Optimal Cluster: ", optimal_row5$G), color = "red", angle = 90, hjust = 1) +
+  labs(title = "Variance vs Optimal Cluster (G)", x = "G", y = "Variance") +
+  theme_minimal()
+
+plot5
+
+
+
+
+
+```
+
+
+## Overall Varoid Gamma and Sigma 
+The variations in \(\gamma\) (cluster-level random effects variance) significantly impact cost efficiency by altering the sensitivity of the results to the number of clusters (\( G \)) and sample sizes per cluster (\( R \)). Higher \(\gamma\) values (e.g., \(\gamma = 3\)) increase sensitivity to \( G \), particularly at smaller \( R \), as greater between-cluster variability necessitates precise tuning of cluster numbers to optimize resource allocation. Conversely, lower \(\gamma\) values (e.g., \(\gamma = 0.5\)) produce more stable cost efficiency across varying \( G \), making the design less sensitive to cluster configurations. At higher \( R \), cost efficiency stabilizes for all \(\gamma\) values, though larger \(\gamma\) requires greater within-cluster sample sizes to achieve similar levels of efficiency. Overall, higher \(\gamma\) amplifies inefficiencies in smaller sample designs, emphasizing the need for careful balancing of \( G \) and \( R \) to account for increased cluster-level variability and ensure cost-effective study designs.
+
+The variations in \(\sigma\) (individual-level random effects variance) significantly influence cost efficiency by affecting the sensitivity of results to the number of clusters (\( G \)) and sample sizes per cluster (\( R \)). Higher \(\sigma\) values (e.g., \(\sigma = 4\)) amplify variability within clusters, leading to greater fluctuations in cost efficiency at smaller \( R \), as higher individual-level noise requires larger sample sizes to maintain precision. In contrast, lower \(\sigma\) values (e.g., \(\sigma = 2\)) result in more stable cost efficiency across cluster configurations, reducing the sensitivity to changes in \( G \). At higher \( R \), cost efficiency stabilizes for all \(\sigma\) values, though higher \(\sigma\) necessitates larger within-cluster sample sizes to counteract the increased variability and achieve optimal efficiency. Overall, larger \(\sigma\) values magnify inefficiencies in smaller sample designs, highlighting the importance of adequately increasing \( R \) to mitigate individual-level noise and ensure effective resource allocation.
+
+
+
+# Varied costs (c1 and c2)
+In my Results 6 Evaluation, the c1 cost was adjusted to 30 dollars and the c2 was kept the same at 5 dollars. In my Results 7 Evaluation, the c1 cost was adjusted to 30 dollars and c2 was adjusted to 2 dollars.In my Results 8 Evaluation, the c1 cost was adjusted to 50 dollars and the c2 was kept the same at 5 dollars. In my Results 9 Evaluation, the c1 cost was adjusted to 50 dollars and the c2 was adjusted to $10. Going through through the evaluation design, I noticed how the G and R adjusted, causing less observations in R.The cost also increased as the the c1 and c2 shifted as well. 
+
+```{r}
+# Evaluate designs
+
+results6 <- evaluate_design(G, R, alpha, beta, gamma2, sigma2, 30, c2, B, n_sim)
+
+
+# Finding the optimal variance
+optimal_row <- results[which.min(results$variance), ]
+
+# Print optimal values
+print(optimal_row)
+
+# Plotting variance vs optimal cluster
+library(ggplot2)
+plot3<-ggplot(results, aes(x = G, y = variance)) +
+  geom_line(color = "blue") +
+  geom_point(color = "darkblue") +
+  geom_vline(xintercept = optimal_row$G, linetype = "dashed", color = "red") +
+  annotate("text", x = optimal_row$G + 20, y = max(results$variance), 
+           label = paste0("Optimal Cluster: ", optimal_row$G), color = "red", angle = 90, hjust = 1) +
+  labs(title = "Variance vs Optimal Cluster (G)", x = "G", y = "Variance") +
+  theme_minimal()
+
+plot3
+
+```
+
+```{r}
+results7 <- evaluate_design(G, R, alpha, beta, gamma2, sigma2, 30, 10, B, n_sim)
+
+
+```
+
+
+```{r}
+results8 <- evaluate_design(G, R, alpha, beta, gamma2, sigma2, 50, c2, B, n_sim)
+
+```
+
+```{r}
+results9 <- evaluate_design(G, R, alpha, beta, gamma2, sigma2, 50, 10, B, n_sim)
+
+```
+
+
+
+
+
+This visualization examines the relationship between cost efficiency and the number of clusters (\( G \)) across different sample sizes per cluster (\( R \)). The results reveal that cost efficiency fluctuates moderately as \( G \) increases for smaller \( R \) values ( \( R = 19, 20, 25 \)), with notable peaks and troughs suggesting sensitivity to cluster size when sample sizes are limited. As \( R \) increases (\( R = 43, 49, 56, 65 \)), the cost efficiency trends become more stable, indicating that larger sample sizes mitigate the impact of changes in \( G \).
+
+For intermediate \( R \) values (e.g., \( R = 25, 29 \)), cost efficiency often reaches optimal levels at moderate \( G \) values, reflecting a balance between distributing resources across clusters and maintaining sufficient within-cluster observations. At very high \( R \) values (e.g., \( R = 99, 132, 199 \)), cost efficiency is consistently low, with minimal fluctuation regardless of \( G \), indicating that high within-cluster sample sizes reduce the sensitivity to cluster count.
+
+Overall, the findings suggest that the relationship between \( G \) and cost efficiency is influenced by the sample size per cluster, with smaller \( R \) requiring careful tuning of \( G \) to optimize efficiency, while higher \( R \) stabilizes performance across a wider range of cluster configurations. This highlights the importance of balancing \( G \) and \( R \) to achieve cost-effective designs within the constraints of a study.
+```{r}
+r6plot<-ggplot(results6, aes(x = G, y = cost_efficiency)) +
+  geom_line(color = "green", size = .5) +
+  geom_point(size = 1) +
+  facet_wrap(~ R) +
+  labs(
+    title = "Results6: Cost Efficiency by Number of Clusters (G) Faceted by R ",
+    x = "Number of Clusters (G)",
+    y = "Cost Efficiency"
+  ) +
+  theme_minimal()
+
+r6plot
+
+
+```
+# Results 7 Plot
+This visualization explores the relationship between cost efficiency and the number of clusters (\( G \)) across varying sample sizes per cluster (\( R \)). The results indicate that cost efficiency exhibits moderate fluctuations as \( G \) increases for smaller sample sizes (\( R = 19, 20, 21 \)), with noticeable peaks , suggesting that optimal cluster configurations are more sensitive when fewer observations per cluster are available. As \( R \) increases (\( R = 25, 27, 29 \)), the fluctuations in cost efficiency smooth out, indicating improved stability in the allocation of resources across cluster configurations.
+
+At higher values of \( R \) ( \( R = 43, 49, 56, 65 \)), cost efficiency stabilizes further, with minimal sensitivity to changes in \( G \). This trend suggests that larger within-cluster sample sizes mitigate the effect of increasing cluster numbers, likely due to sufficient representation within each group. For the highest \( R \) values (e.g., \( R = 79, 99, 132 \)), cost efficiency remains consistently low across all \( G \), reflecting optimal resource utilization and reduced dependency on cluster count.
+
+Overall, the findings highlight that the interplay between \( G \) and \( R \) is a critical factor in optimizing cost efficiency. Smaller \( R \) values necessitate careful tuning of \( G \) to achieve efficiency, while larger \( R \) values reduce the need for precise adjustments, offering more flexibility in cluster design. These insights are crucial for designing cost-effective studies that balance cluster count and sample size within resource constraints.
+
+```{r}
+
+r7plot<-ggplot(results7, aes(x = G, y = cost_efficiency)) +
+  geom_line(color = "green", size = .5) +
+  geom_point(size = 1) +
+  facet_wrap(~ R) +
+  labs(
+    title = " Results7: Cost Efficiency by Number of Clusters (G) Faceted by R",
+    x = "Number of Clusters (G)",
+    y = "Cost Efficiency"
+  ) +
+  theme_minimal()
+ r7plot
+
+
+```
+
+## Results 8 Plot
+
+This visualization illustrates the relationship between cost efficiency and the number of clusters (\( G \)), faceted by different sample sizes per cluster (\( R \)). Across most values of \( R \), cost efficiency fluctuates with changes in \( G \), though the magnitude and patterns of fluctuation vary. For smaller \( R \) values (e.g., \( R = 19, 20, 25 \)), there is more pronounced variability in cost efficiency as \( G \) increases, suggesting that optimizing cluster size plays a more critical role in resource allocation when per-cluster sample sizes are smaller. At higher \( R \) values (e.g., \( R = 43, 49, 65 \)), the cost efficiency stabilizes, with smaller deviations as \( G \) increases, indicating diminishing returns in adjusting \( G \) when sample sizes are sufficiently large.
+
+Notably, for intermediate \( R \) values such as \( R = 25 \) or \( R = 29 \), peaks in cost efficiency occur at moderate \( G \) values, highlighting an optimal balance where resources are neither too dispersed across too many clusters nor concentrated in too few. For very large \( R \) values (e.g., \( R = 99, 132, 199 \)), cost efficiency remains nearly constant regardless of \( G \), reflecting that higher sample sizes per cluster mitigate the effect of cluster count on resource allocation.
+
+Overall, the results indicate that the interplay between \( G \) and \( R \) significantly influences cost efficiency, with the optimal number of clusters depending on the sample size per cluster and the budget constraints. These findings emphasize the importance of tailoring \( G \) and \( R \) to the study design goals and available resources.
+```{r}
+r8plot<-ggplot(results8, aes(x = G, y = cost_efficiency)) +
+  geom_line(color = "green", size = .5) +
+  geom_point(size = 1) +
+  facet_wrap(~ R) +
+  labs(
+    title = "Results 8: Cost Efficiency by Number of Clusters (G) Faceted by R",
+    x = "Number of Clusters (G)",
+    y = "Cost Efficiency"
+  ) +
+  theme_minimal()
+r8plot
+
+```
+## Results Plot 9
+
+This visualization illustrates the relationship between cost efficiency and the number of clusters (\( G \)), faceted by the sample size per cluster (\( R \)). The cost efficiency tends to fluctuate as \( G \) increases, with varying trends across different values of \( R \). For smaller values of \( R \), such as 19 or 20, cost efficiency exhibits relatively minor variability across the range of \( G \), indicating consistent allocation of resources. However, as \( R \) increases (e.g., \( R = 43, 56, 65 \)), the patterns become more irregular, suggesting that higher \( R \) introduces greater sensitivity to changes in \( G \). 
+
+Notably, cost efficiency is generally lower (closer to optimal) for moderate values of \( G \), with some dips observed in certain scenarios, reflecting improved resource utilization. Extreme values of \( G \), either very small or very large, often result in higher (less efficient) cost efficiency values. This pattern underscores the trade-off between dividing resources across many clusters (large \( G \)) and ensuring sufficient sample sizes within each cluster (larger \( R \)). The results suggest that optimal cost efficiency is achieved at a balance point where \( G \) and \( R \) are neither too small nor too large, and this balance depends on the overall study design and resource allocation constraints.
+```{r}
+
+r9_plot<-ggplot(results9, aes(x = G, y = cost_efficiency)) +
+  geom_line(color = "green", size = .5) +
+  geom_point(size = 1) +
+  facet_wrap(~ R) +
+  labs(
+    title = " Results 9: Cost Efficiency by Number of Clusters (G) Faceted by R",
+    x = "Number of Clusters (G)",
+    y = "Cost Efficiency"
+  ) +
+  theme_minimal()
+
+r9_plot
+
+```
+
+# Aim 3 : Poisson Regression Model
+ 
+## Poisson Distribution
+# 
+# 
+# 
+# set.seed(222)
+# 
+# # Function to simulate data
+# data_simulated <- function(G, R, alpha, beta, gamma2, sigma2, treatment_prob = 0.5) {
+#   # Generate cluster-level treatment assignment
+#   X <- rbinom(G, 1, treatment_prob) # Randomly assign treatment (1) or control (0) to clusters
+#   
+#   # Generate cluster-level random effects
+#   epsilon <- rnorm(G, mean = 0, sd = sqrt(gamma2))
+#   
+#   # Generate individual-level observations
+#   data <- data.frame(
+#     cluster = rep(1:G, each = R),
+#     X = rep(X, each = R)
+#   )
+#   
+#   epsilon <- rep(epsilon, each = R) # Repeat cluster-level random effects for all individuals in the cluster
+#   Mu <- exp(alpha + beta * data$X + epsilon)
+#   data$Y <- rpois(n = nrow(data), lambda = Mu)
+#   
+#   return(data)
+# }
+# 
+# # Function to evaluate designs
+# evaluate_design2 <- function(G, R, alpha, beta, gamma2, c1, c2, B, n_sim) {
+#   results <- data.frame(
+#     G = integer(), 
+#     R = integer(), 
+#     bias = numeric(), 
+#     variance = numeric(), 
+#     Mu=numeric(), 
+#     total_cost = numeric(), 
+#     cost_efficiency = numeric()
+#   )
+#   
+#   for (g in G) {
+#     for (r in R) {
+#       # Check budget constraint
+#       total_cost <- g * c1 + g * (r - 1) * c2
+#       if (total_cost > B) next # Skip if over budget
+#       
+#       beta_estimates <- numeric(n_sim)
+#       
+#       for (sim in 1:n_sim) {
+#         data2 <- data_simulated(G = g, R = r, alpha = alpha, beta = beta, gamma2 = gamma2, sigma2 = 0)
+#         
+#         # Fit Poisson mixed-effects model
+#         model <- glmer(Y ~ X + (1 | cluster), data = data2, family = poisson)
+#         beta_estimates[sim] <- fixef(model)["X"] # Extract estimate for beta
+#       }
+#       
+#   
+#      
+#       # Calculate performance metrics
+#      
+#       variance <- var(beta_estimates,na.rm=T) 
+#       random_effects_variance <- as.numeric(VarCorr(model)$cluster[1])  # gamma^2
+#       residual_variance <- attr(VarCorr(model), "sc")^2  # sigma^2
+# 
+#   # Calculate ICC
+# icc <- random_effects_variance / (random_effects_variance + residual_variance)
+#       # Calculate cost efficiency
+#       precision <- 1 / variance
+#       cost_efficiency <- precision / total_cost
+#       # Store results
+#       results <- rbind(results, data.frame(
+#         G = g, 
+#         R = r, 
+#         Mu=Mu, 
+#         variance = variance, 
+#         gamma2=gamma2,
+#         sigma2=sigma2,
+#         alpha=alpha,
+#         beta=beta,
+#         total_cost = total_cost, 
+#         cost_efficiency = cost_efficiency
+#       ))
+#     }
+#   }
+#   
+#   return(results)
+# }
+# 
+# # Example usage
+# # Fixed Parameters
+# alpha <- 0
+# beta <- 1 # True treatment effect
+# 
+# 
+# # Varying Parameters
+# gamma2 <- 1 # Between-cluster variance
+# sigma2 <- 1 # Within-cluster variance
+# c1 <- 10 # Cost of the first sample in a cluster
+# c2 <- 5 # Cost of additional samples in the same cluster
+# B <- 10000 # Budget
+# n_sim <- 100 # Number of simulations
+# # Design grid
+# G <- seq(5, 100, by = 5) # Number of clusters
+# R<-floor((((B/G)-c1)/c2)+1)
+# # Run evaluation
+# poisson_model <- evaluate_design2(G = G, R = R, alpha = alpha, beta = beta, gamma2 = gamma2, c1 = c1, c2 = c2, B = B, n_sim = n_sim)
+# 
+# # Display results
+# print(results)
+# 
+# 
+# 
+#
+
+
+#Limitations
+
+This simulation model provides a structured framework for understanding how different design parameters, such as the number of clusters (G) the number of individuals per cluster (R) and variance components ($\gamma^2$\, $\sigma^2$) impact key metrics like precision, ICC, and cost efficiency. However, it comes with limitations like any other simulation study. One significant limitation is the reliance on simplified assumptions about the data-generating process. For example, this model assumes linear relationships between the response (Y) and predictors (X), as well as normally distributed random effects and residuals. In reality, data distributions may deviate from these assumptions, especially if there are non-linear effects, heteroscedasticity, or other violations. These deviations could lead to biases in the estimation of parameters or underestimation of variability, reducing the generalizability of the findings.
+
+ While the simulation allows for varying $\gamma^2$\, $\sigma^2$, $c1$, and $c2$ it does not account for real-world complexities such as missing data, measurement errors, or unmeasured confounding, which are common in hierarchical and cluster-based studies. Additionally, the fixed cost structure ((\c1 and \c2) may not reflect nuanced cost variations that arise in real studies, such as differences in recruitment costs across clusters or regions. Lastly, while the model provides insights into optimal design strategies for specific scenarios, it does not account for ethical or logistical constraints, such as the feasibility of recruiting large numbers of clusters or individuals within clusters. These limitations highlight the need to interpret simulation results with caution and validate findings with real data.
+
+
+While the simulation models used here are helpful for understanding the general relationships between treatment effects, clustering, variance, and cost, they have several limitations. First, the models assume that all clusters are independently randomized with respect to treatment, and they rely on the assumption of homogeneity within clusters, which might not reflect real-world complexities. In practice, clusters may have varying characteristics, leading to more intricate intra-cluster correlations or treatment effects that differ by cluster. The model also assumes fixed costs (c1 and 
+c2)per cluster and per individual, which simplifies the financial structure but may not account for real-world complexities such as varying costs depending on cluster size, location, or other logistical factors. Additionally, assuming a simple linear relationship between variance and cost neglects potential non-linear dynamics that might emerge in larger or more diverse datasets.
+
+Another limitation is the oversimplification of the relationship between between-cluster variance ($\gamma^2$\ and $\sigma^2$) which might not fully capture the nuanced trade-offs in real-world data. For example, the model assumes that total variance can be adequately represented by these two components, but in reality, there might be other sources of variance, such as measurement error or unaccounted-for confounding factors. Moreover, the model does not incorporate potential issues such as non-response or drop-out, which can influence the distribution of data across clusters and treatment groups. The reliance on simulated data means that it may not account for the heterogeneity in real-world datasets, and the results are highly sensitive to the assumptions made about the true underlying distributions of $\gamma^2$\ and  $\sigma^2$.
+
+
+I didn't get to finish my poisson distribution, but I hooe to compare it with the normal distribution in the future.
+ 
+
+
+# Conclusion
+In conclusion, the simulation model study effectively demonstrated the intricate trade-offs inherent in optimizing study design under budgetary constraints while balancing statistical performance measures such as variance, cost-efficiency, and intra-class correlation coefficients (ICC). By systematically varying the number of groups (G) and sample sizes per group (R), the study highlighted the critical role of these parameters in achieving an optimal balance between precision and resource allocation. Scenarios with higher ICCs emphasized the need for larger group sizes to capture within-cluster correlations, whereas lower ICCs, as observed in specific models, suggested that individual-level variability dominated the response.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
