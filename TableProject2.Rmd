@@ -1,0 +1,112 @@
+---
+title: "Untitled"
+author: "Diahmin Hawkins dlh2166@columbia.edu"
+date: "12/12/2024"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+
+```{r}
+
+library(readr)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(MASS)
+library(tidyr)
+library(kableExtra)
+library(knitr)
+library(GGally)
+library(naniar)
+library(visdat)
+library(gtsummary)
+library(gt)
+library(mice)
+library(corrplot) 
+library(reshape2)
+library(ggwordcloud)
+library(magick)
+library(glmnet)
+library(caret)
+library(car)
+library(broom)
+library(gridExtra)
+library(pROC)
+library(broom)
+#Load the data in
+
+
+project2 <- read_csv("~/Documents/GitHub/Project2/project2.csv")
+```
+
+
+
+
+
+```{r}
+# summary table with baseline variables
+
+# define treatment categories
+project2_treatments <- project2 %>%
+  mutate(
+    treatment_groups = case_when(
+      Var == 1 & BA == 1 ~ "BASC + Varenicline",
+      Var == 0 & BA == 1 ~ "BASC + Placebo",
+      Var == 1 & BA == 0 ~ "ST + Varenicline",
+      Var == 0 & BA == 0 ~ "ST + Placebo"
+    )
+  ) 
+
+
+
+# Combine Races
+
+project2_table$edu
+project2_treatments$edu<- project2_table%>%
+  mutate(edu=str_replace(educ, "1","2","3"))
+ ?str_replace 
+  
+baseline_table <- project2_treatments %>%
+  select(
+    treatment_groups, age_ps, sex_ps, NHW, Black, Hisp, inc, edu,
+    ftcd_score, ftcd.5.mins, bdi_score_w00, cpd_ps, crv_total_pq1, 
+    hedonsum_n_pq1, hedonsum_y_pq1, shaps_score_pq1, otherdiag, 
+    antidepmed, mde_curr, NMR, Only.Menthol, readiness
+  ) %>%
+  tbl_summary(
+    by = treatment_groups,
+    label = list(
+      age_ps ~ "Age",
+      sex_ps ~ "Sex",
+      NHW ~ "Non-Hispanic White",
+      Black ~ "Black",
+      Hisp ~ "Hispanic",
+      inc ~ "Income",
+      edu ~ "Education Level",
+      ftcd_score ~ "FTCD Score",
+      ftcd.5.mins ~ "FTCD Score (5 mins)",
+      bdi_score_w00 ~ "BDI Score",
+      cpd_ps ~ "Cigarettes per day",
+      crv_total_pq1 ~ "Craving Total",
+      hedonsum_n_pq1 ~ "Hedonic Sum (Negative)",
+      hedonsum_y_pq1 ~ "Hedonic Sum (Positive)",
+      shaps_score_pq1 ~ "Shaps Score",
+      otherdiag ~ "Other Diagnoses",
+      antidepmed ~ "Antidepressant Medication",
+      mde_curr ~ "Current Major Depression Episode",
+      NMR ~ "Nicotine Metabolism Ratio",
+      Only.Menthol ~ "Only Menthol",
+      readiness ~ "Readiness to Quit"
+    ))
+
+
+
+
+baseline_table
+
+#gtsave(as_gt(baseline_table,"adjustedtable.png"))
+#gtsummary::as_gt(baseline_table, "adjustedtable.png")
+```

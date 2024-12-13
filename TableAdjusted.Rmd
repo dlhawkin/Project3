@@ -1,0 +1,20 @@
+---
+title: "Causal Final Project"
+author: "Diahmin Hawkins dlh2166@columbia.edu"
+date: "12/3/2024"
+output: html_document
+---
+
+```{r}
+library("causaldata")
+
+black_politicians
+?black_politicians
+
+names(black_politicians)
+treatment is email
+matching and weighting 
+Since they use matching, we ca use weighting 
+use same set of matching 
+close_elections_lmb
+```

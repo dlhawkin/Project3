@@ -1,0 +1,31 @@
+---
+title: "Reflection for Final Portfolio"
+author: "Diahmin Hawkins dlh2166@columbia.edu"
+date: "12/9/2024"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+
+"The more reflective you are, the more effective you are," is a great quote by Hall and Simeral. This semester, I enrolled in a course Practical Data Analysis with Dr. Alice Paul  where my analttical and problem solving were put to the test. Throughout the semester, I have become a better statistician and more aware of the things I need to work on and things I flourish in. In this reflection, we will discuss my first two projects "Impact of Environmental Conditions on Marathon Runners’Performance Based on Gender and Age" and "".
+
+# Project 1
+Project 1 consisted of an exploratory data analysis that explored the impactf of environmental conditions on marathon runners' performance based upon their gender and age. This was one of my favorite projects because I actually talked with participants that participated in these marathons at the *Naragansett Run Club* to obtain a personal connection and understanding of their perspective. Even though it was my favorite project, many changes were brought to attention and adjusted accordingly. In my `Effects of Age on Marathon Performance in Men and Women Box Plot`, I removed the plot because it has similar information as the previous plot in the study. I changed my `Effects of Marathon Performance Stratified by Race, Gender, and Age Group Boxplot` because it did not quantify my results to demonstrate the best performance amongst the different genders for each race.
+
+
+In Aim 2, it was challenging to interpret the previous plot, `Effects of Marathon Performance Stratified by Race, Gender, and Age Group`, as it did not clearly indicate which race yielded the best performance across genders. To enhance clarity and facilitate comparisons, I created a new plot that visualized runtime performance in minutes, stratified by marathon races and filled by gender. This modification revealed that male participants in the Boston Marathon exhibited the highest performance levels. Additionally, it became evident that men outperformed women overall across all marathons.
+
+In Aim 2, I was able to explore the impact of environmental conditions on marathon performance, and whether the impact differs across age and gender. In this Aim 2 analysis approach, I explored a linear regression model to investigate the relationship between runtimes and other key variables that consisted of weather parameters, social characteristics, and marathon races. Previously, I did not include the marathon races as one of my predictor variables. So, in efforts to see the impact of races on runtimes, this was implemented in the model.Also, the weather parameters illustrated high vif which causes multicollinearity and correlations within weather parameters. Based on the definitions of the weather parameters and vif scores, I removed the high vif values. I included only `Percent Relative Humidity` , `Wet Bulb Globe Temp`,`Wind Speed`, `Dew Point in C` , and `Solar Radiation`. This improved the multicollinearity with lower VIF compared to original model.
+
+In my analysis, I noticed age was non-linear and demonstrated a U-shpaped. Due to this non-linearity, I created a model with that did not include age to see the difference in impact and measured the AIC and BIC. The AIC and BIC were lower in the original model, which demonstrated that age has an impact on the runtimes for the marathon runners
+
+Last, but not least, Aim 3 asked us to identify the weather parameters (WBGT, Flag conditions, temperature,etc) that have the largest impact on marathon performance. In this analysis portion, I needed to change the factors severity of the flag conditions for better interpretation and readability.The Flag severities consists of White= WGBT<10C, Green= WBGT 10-18C, Red= WBGT>23-28C, and Black= WBGT>28C.
+
+From this project, I learned more about multicolinearity and its importance. Multicollinearity is a key concept in regression analysis that occurs when two or more independent variables are highly correlated, leading to redundancy in the information they provide to the model. This can inflate the variance of the coefficient estimates, making it harder to determine the individual effect of each variable on the dependent variable. In my analysis, I noticed high VIF values among the weather parameters, which highlighted the presence of multicollinearity. Addressing this is critical because it ensures that the predictors in the model contribute unique information, making the results more interpretable and reliable. Ignoring multicollinearity can lead to misleading conclusions or overly sensitive models that react to small changes in the data. By identifying and addressing multicollinearity, I learned how to refine my models and produce results that are more stable and trustworthy for decision-making.
+
+I also learned about spline regression and how to apply it. Spline regression is used for non-linear modeling.I was able to create knots for the ages to better fit the model and compared nit with the linear regression model.
+
+
+#Project 2

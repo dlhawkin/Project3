@@ -811,68 +811,91 @@ r9_plot
 # Aim 3 : Poisson Regression Model
  
 ## Poisson Distribution
-# 
-# 
-# 
-# set.seed(222)
-# 
-# # Function to simulate data
-# data_simulated <- function(G, R, alpha, beta, gamma2, sigma2, treatment_prob = 0.5) {
-#   # Generate cluster-level treatment assignment
-#   X <- rbinom(G, 1, treatment_prob) # Randomly assign treatment (1) or control (0) to clusters
-#   
-#   # Generate cluster-level random effects
-#   epsilon <- rnorm(G, mean = 0, sd = sqrt(gamma2))
-#   
-#   # Generate individual-level observations
-#   data <- data.frame(
-#     cluster = rep(1:G, each = R),
-#     X = rep(X, each = R)
-#   )
-#   
-#   epsilon <- rep(epsilon, each = R) # Repeat cluster-level random effects for all individuals in the cluster
-#   Mu <- exp(alpha + beta * data$X + epsilon)
-#   data$Y <- rpois(n = nrow(data), lambda = Mu)
-#   
-#   return(data)
-# }
-# 
+
+
+```{r}
+set.seed(222)
+ # Function to simulate data
+ data_simulated <- function(G, R, alpha, beta, gamma2, sigma2, treatment_prob = 0.5) {
+   # Generate cluster-level treatment assignment
+   X <- rbinom(G, 1, treatment_prob) # Randomly assign treatment (1) or control (0) to clusters
+
+   # Generate cluster-level random effects
+   epsilon <- rnorm(G, mean = 0, sd = sqrt(gamma2))
+
+  # Generate individual-level observations
+   data <- data.frame(
+    cluster = rep(1:G, each = R),
+    X = rep(X, each = R)
+ )
+
+   epsilon <- rep(epsilon, each = R) # Repeat cluster-level random effects for all individuals in the cluster
+    Mu <- exp(alpha + beta * data$X + epsilon)
+    data$Y <- rpois(n = nrow(data), lambda = Mu)
+
+   return(data)
+ }
+ 
+ simulated_data <- data_simulated(G=g, R=R, alpha, beta, gamma2, sigma2, treatment_prob=0.5)
+print(simulated_data)
+ 
+ # # Example usage
+# # Fixed Parameters
+alpha <- 0
+beta <- 1 # True treatment effect
+
+# # Varying Parameters
+gamma2 <- 1 # Between-cluster variance
+sigma2 <- 1 # Within-cluster variance
+c1 <- 10 # Cost of the first sample in a cluster
+c2 <- 5 # Cost of additional samples in the same cluster
+B <- 10000 # Budget
+n_sim <- 100 # Number of simulations
+# Design grid
+g <- seq(5, 100, by = 5) # Number of clusters
+R<-floor((((B/G)-c1)/c2)+1)
+# #Run evaluation
+# poisson_model <- evaluate_design2(G = G, R = R, alpha = alpha, beta = beta, gamma2 = gamma2, c1 = c1, c2 = c2, B = B, n_sim = n_sim)
+
+
+ example<- function(G, R, alpha, beta, gamma2, sigma2, treatment_prob = 0.5) 
+```
 # # Function to evaluate designs
 # evaluate_design2 <- function(G, R, alpha, beta, gamma2, c1, c2, B, n_sim) {
 #   results <- data.frame(
-#     G = integer(), 
-#     R = integer(), 
-#     bias = numeric(), 
-#     variance = numeric(), 
-#     Mu=numeric(), 
-#     total_cost = numeric(), 
+#     G = integer(),
+#     R = integer(),
+#     bias = numeric(),
+#     variance = numeric(),
+#     Mu=numeric(),
+#     total_cost = numeric(),
 #     cost_efficiency = numeric()
 #   )
-#   
+#
 #   for (g in G) {
 #     for (r in R) {
 #       # Check budget constraint
 #       total_cost <- g * c1 + g * (r - 1) * c2
 #       if (total_cost > B) next # Skip if over budget
-#       
+#
 #       beta_estimates <- numeric(n_sim)
-#       
+#
 #       for (sim in 1:n_sim) {
 #         data2 <- data_simulated(G = g, R = r, alpha = alpha, beta = beta, gamma2 = gamma2, sigma2 = 0)
-#         
+#
 #         # Fit Poisson mixed-effects model
 #         model <- glmer(Y ~ X + (1 | cluster), data = data2, family = poisson)
 #         beta_estimates[sim] <- fixef(model)["X"] # Extract estimate for beta
 #       }
-#       
-#   
-#      
+#
+#
+#
 #       # Calculate performance metrics
-#      
-#       variance <- var(beta_estimates,na.rm=T) 
+#
+#       variance <- var(beta_estimates,na.rm=T)
 #       random_effects_variance <- as.numeric(VarCorr(model)$cluster[1])  # gamma^2
 #       residual_variance <- attr(VarCorr(model), "sc")^2  # sigma^2
-# 
+#
 #   # Calculate ICC
 # icc <- random_effects_variance / (random_effects_variance + residual_variance)
 #       # Calculate cost efficiency
@@ -880,29 +903,29 @@ r9_plot
 #       cost_efficiency <- precision / total_cost
 #       # Store results
 #       results <- rbind(results, data.frame(
-#         G = g, 
-#         R = r, 
-#         Mu=Mu, 
-#         variance = variance, 
+#         G = g,
+#         R = r,
+#         Mu=Mu,
+#         variance = variance,
 #         gamma2=gamma2,
 #         sigma2=sigma2,
 #         alpha=alpha,
 #         beta=beta,
-#         total_cost = total_cost, 
+#         total_cost = total_cost,
 #         cost_efficiency = cost_efficiency
 #       ))
 #     }
 #   }
-#   
+#
 #   return(results)
 # }
-# 
+#
 # # Example usage
 # # Fixed Parameters
 # alpha <- 0
 # beta <- 1 # True treatment effect
-# 
-# 
+#
+#
 # # Varying Parameters
 # gamma2 <- 1 # Between-cluster variance
 # sigma2 <- 1 # Within-cluster variance
@@ -915,14 +938,15 @@ r9_plot
 # R<-floor((((B/G)-c1)/c2)+1)
 # # Run evaluation
 # poisson_model <- evaluate_design2(G = G, R = R, alpha = alpha, beta = beta, gamma2 = gamma2, c1 = c1, c2 = c2, B = B, n_sim = n_sim)
-# 
+#
 # # Display results
 # print(results)
-# 
-# 
-# 
+#
+#
+#
 #
 
+    
 
 #Limitations
 
